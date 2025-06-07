@@ -19,7 +19,7 @@ DRS *DRS_new()
 
     //flags
     me->AutoDRSActive = FALSE;
-    me->currentDRSMode = MANUAL; 
+    me->currentDRSMode = DRS_MODE_MANUAL; 
     me->drsFlapOpen = FALSE;
     me->drsSafteyTimer = NULL;
 
@@ -47,6 +47,7 @@ DRS *DRS_new()
 //----------------------------------------------------------------------
 
 
+
 void DRS_update(DRS *me, MotorController *mcm, TorqueEncoder *tps, BrakePressureSensor *bps) {
     
     // Checks for updates to Rotary Knob Position
@@ -65,26 +66,24 @@ void DRS_update(DRS *me, MotorController *mcm, TorqueEncoder *tps, BrakePressure
         me->buttonPressed = FALSE;
     }
 
-    me->currentDRSMode = MANUAL; 
-
     switch(me->currentDRSMode)
         {
-            case STAY_CLOSED:
+            case DRS_MODE_STAY_CLOSED:
                 DRS_close(me);
                 break;
 
-            case STAY_OPEN:
+            case DRS_MODE_STAY_OPEN:
                 DRS_open(me);           
                 break;
 
-            case MANUAL:
+            case DRS_MODE_MANUAL:
                 if(me->buttonPressed) {
                     DRS_open(me); }
                 else {
                     DRS_close(me); }
                 break;
 
-            case ASSISTIVE:
+            case DRS_MODE_ASSISTIVE:
                 /* 
                 1. To open, check if button is pressed & DRS flap closed (should be false) & Have waited at least 5 cycles (50ms)
                 2. Restar timer & Open DRS
@@ -109,7 +108,7 @@ void DRS_update(DRS *me, MotorController *mcm, TorqueEncoder *tps, BrakePressure
                 }
                 break;
 
-            case AUTO:
+            case DRS_MODE_AUTO:
 
                 // Unknown for now if physical components can be damaged when requesting flap open  when already opened, hence the nested if
                 if (groundspeedMPH > 5 && appsPercent > .75 && steeringAngle > -15 && steeringAngle < 15 && bpsPercent < .10) {
@@ -142,18 +141,4 @@ void DRS_close(DRS *me) {
     IO_DO_Set(IO_DO_06, FALSE);
     IO_DO_Set(IO_DO_07, TRUE);
     me->drsFlapOpen = 0;
-}
-
-//Change to future regarding rotary voltage values
-void DRS_selectMode(DRS *me) {
-        if (Sensor_DRSKnob.sensorValue == 0)
-        {    me->currentDRSMode = STAY_CLOSED;}
-        else if (Sensor_DRSKnob.sensorValue <= 1.1)
-        {    me->currentDRSMode = MANUAL;}
-        else if (Sensor_DRSKnob.sensorValue <= 2.2)
-        {    me->currentDRSMode = ASSISTIVE;}
-        else if (Sensor_DRSKnob.sensorValue <= 3.3)
-        {    me->currentDRSMode = STAY_OPEN;}
-        else if (Sensor_DRSKnob.sensorValue > 3.3)
-        {    me->currentDRSMode = STAY_CLOSED;}
 }
