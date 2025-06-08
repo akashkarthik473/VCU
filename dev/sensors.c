@@ -261,9 +261,29 @@ DRSMode getDRSMode(Sensor* sensor) {
     }
 }
 
-PLMode getPLMode(Sensor* sensor) {
-    RotaryPosition pos = getRotaryPosition(sensor);
-    
+PLMode getPLMode() {
+    //RotaryPosition pos = getRotaryPosition(sensor);
+    float voltage= (float)(Sensor_PLKnob.sensorValue);
+    if (voltage > 3700) {
+    return PL_MODE_80;
+    } 
+    else if (voltage > 2900) {
+        return PL_MODE_60;
+    } 
+    else if (voltage > 2300) {
+        return PL_MODE_50;
+    } 
+    else if (voltage > 1500) {
+        return PL_MODE_40;
+    } 
+    else if (voltage > 800) {
+        return PL_MODE_30;
+    } 
+    else{
+        return PL_MODE_OFF;
+    }
+
+    /*
     switch(pos) {
         case ROTARY_POS_1:
             return PL_MODE_30;
@@ -280,4 +300,5 @@ PLMode getPLMode(Sensor* sensor) {
         default:
             return PL_MODE_OFF;  // default to safe mode
     }
+    */
 }

@@ -243,7 +243,8 @@ typedef enum {
 // function declarations
 RotaryPosition getRotaryPosition(Sensor* sensor);
 DRSMode getDRSMode(Sensor* sensor);
-PLMode getPLMode(Sensor* sensor);
+PLMode getPLMode();
+
 
 
 #endif // _SENSORS_H
