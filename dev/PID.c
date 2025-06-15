@@ -24,23 +24,22 @@ PID* PID_new(sbyte2 Kp, sbyte2 Ki, sbyte2 Kd, sbyte2 saturationValue, sbyte2 sca
     */
     if (pid == NULL)
         return NULL;
-    //max range of PID gain values [-32,768 to 32,767] -> effectively [-3,276.8 to 3,276.7] : see last line of PID_computeOutput() for reason why
+    //max range of PID gain values [-32,768 to 32,767] -> is effectively scaled down by pid->scalar, but is done out of order for effiiciency reasons
     pid->Kp = Kp;
     pid->Ki = Ki;
     pid->Kd = Kd;
+    pid->scalar = scalar;
+
     pid->setpoint      = 0; 
-    pid->previousError = 0;
-    pid->totalError    = 0; //max range of values [-32,768 to 32,767]
+    pid->previousError = pid->totalError = 0;
     pid->dH            = VCU_CYCLE_TIME_HZ; // 100 Hz aka 10 ms cycle time. view as inverese of 0.01 seconds, being done to avoid fpu usage
-    pid->output        = 0;
-    pid->proportional  = 0;
-    pid->integral      = 0;
-    pid->derivative    = 0;
+
+    pid->output = pid->proportional = pid->integral = pid->derivative = 0;
     pid->saturationValue = saturationValue;
     pid->antiWindupFlag = FALSE;
-    pid->frequency     = 1;
-    pid->timer         = 1;
-    pid->scalar        = scalar;
+    pid->frequency = pid->timer = 1;
+    pid->sensorValueReAdd = FALSE;
+    pid->sensorInput = 0;
     return pid;
 }
 
@@ -87,12 +86,25 @@ void PID_updateSettings(PID* pid, PID_Settings setting, sbyte2 input1){
         case scalar:
             pid->scalar = input1;
         break;
+
+        case sensorInput:
+            pid->sensorValueReAdd = input1;
+        break;
     }
 }
 
 /** COMPUTATIONS **/
 // PID will compute at the chosen frequency. When function is called but not ready to calculate, pid->output will be set to NULL
-void PID_computeOutput(PID *pid, sbyte2 sensorValue) {
+sbyte2 PID_computeOutput(PID *pid, sbyte2 sensorValue) {
+    // If the sensor Value is not re-added, then the saturation Value is largely useless as the pid will have no reference or bearing for what the absolute state of th esystem is.
+    if(pid->sensorValueReAdd)
+    {
+        pid->output = pid->sensorInput;
+    }
+    else
+    {
+        pid->output - 0; // Clearing the output if not re-adding
+    }
     if( pid->frequency % pid->timer == 0 ){
         sbyte2 currentError = pid->setpoint - sensorValue;
         pid->proportional   = (sbyte4) pid->Kp * currentError;
@@ -100,7 +112,7 @@ void PID_computeOutput(PID *pid, sbyte2 sensorValue) {
         pid->derivative     = (sbyte4) pid->Kd * (currentError - pid->previousError) * pid->dH ;
 
         // At minimum, a P(ID) Controller will always use Proportional Control
-        pid->output = (sbyte2) pid->proportional;
+        pid->output += (sbyte2) pid->proportional;
 
         //Check to see if motor is saturated at max torque request already, if so, clamp the output to the saturation value
         if(pid->saturationValue > sensorValue){
@@ -112,29 +124,26 @@ void PID_computeOutput(PID *pid, sbyte2 sensorValue) {
         }
         else{
             pid->antiWindupFlag = TRUE;
-            /** Back Calculation here -> this is the old way of doing it with the previous "pid" method in LaunchControl.c of SR-15 main branch
+            /* 
+             *  Back Calculation here -> this is the old way of doing it with the previous "pid" method in LaunchControl.c of SR-15 main branch
              *  Simulink recomends a "Kb" or separate tuning value for unwinding a controller, and to use either clamping or back-calculation
              *  Both methods of anti-windup can be used simultaneously, but the complexity of using both will likely cause some unintendeed consequences.
              *  If experiencing oscillations at saturation limits, I advise to try tuning the Ki gain value first before trying to use back-Calculation 
              *  (and if doing so, its likely best to write a whole new function, and a switch case between clamping & backCalcs, rather than amending the line below)
-            */
+             */
             pid->totalError -= pid->previousError;
         }
-
         // Divide by 10 is used to convert the error from deci-units to normal units (gain values are in deci-units)
         pid->output = pid->output / pid->scalar;
         pid->timer = 1;
-    }
-    else{
-        pid->output = NULL;
+    } else {
         ++pid->timer;
     }
+    return pid->output;
 }
 
-void PID_addSensorInput(PID* pid, ubyte2 (*funcPtr)()) {
-    if (funcPtr != NULL) {
-        pid->output = funcPtr();
-    }
+void PID_updateSensorInput(PID* pid, sbyte2 sensorInput) {
+    pid->sensorInput = sensorInput;
 }
 
 
@@ -166,6 +175,10 @@ sbyte2 PID_getSettings(PID* pid, PID_Settings setting){
 
         case scalar:
             return pid->scalar;
+
+        case sensorInput:
+            return pid->sensorValueReAdd;
+
     }
     return NULL;
 }
@@ -174,7 +187,7 @@ sbyte2 PID_getPreviousError(PID *pid){
     return pid->previousError;
 }
 
-sbyte2 PID_getTotalError(PID* pid){
+sbyte4 PID_getTotalError(PID* pid){
     return pid->totalError;
 }
 

@@ -11,7 +11,7 @@
 #include "globalConstants.h"
 #include "IO_Driver.h" //Includes datatypes, constants, etc - should be included in every c file
 
-typedef enum { Kp,Ki,Kd,setpoint,totalError,saturationValue,frequency,scalar } PID_Settings;
+typedef enum { Kp,Ki,Kd,setpoint,totalError,saturationValue,frequency,scalar,sensorInput } PID_Settings;
 
 // Define a structure for the PID controller
 typedef struct _PID {
@@ -38,6 +38,8 @@ typedef struct _PID {
                             *   If it were to drop to 5ms cycle time, the frequency setting of 1 would now be 200 hz.
                             */
     sbyte2 scalar;
+    bool sensorValueReAdd;
+    sbyte2 sensorInput;
 }PID;
 
 /**
@@ -53,14 +55,14 @@ void PID_updateSettings(PID* pid, PID_Settings setting, sbyte2 input1);
 
 /** COMPUTATIONS **/
 
-void PID_computeOutput(PID *pid, sbyte2 sensorValue);
-void PID_addSensorInput(PID* pid, ubyte2 (*funcPtr)());
+sbyte2 PID_computeOutput(PID *pid, sbyte2 sensorValue);
+void PID_updateSensorInput(PID* pid, sbyte2 sensorInput);
 
 /** GETTER FUNCTIONS **/
 
 sbyte2 PID_getSettings(PID* pid, PID_Settings setting);
 sbyte2 PID_getPreviousError(PID *pid);
-sbyte2 PID_getTotalError(PID* pid);
+sbyte4 PID_getTotalError(PID* pid);
 sbyte2 PID_getOutput(PID *pid);
 sbyte2 PID_getProportional(PID *pid);
 sbyte2 PID_getIntegral(PID *pid);
