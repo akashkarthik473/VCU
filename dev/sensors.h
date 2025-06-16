@@ -211,7 +211,6 @@ void Light_set(Light light, float4 percent);
 
 // rotary switch position definitions
 typedef enum {
-    ROTARY_POS_0 = 0,
     ROTARY_POS_1 = 1,
     ROTARY_POS_2 = 2,
     ROTARY_POS_3 = 3,

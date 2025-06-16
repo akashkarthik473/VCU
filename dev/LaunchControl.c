@@ -92,14 +92,12 @@ void LaunchControl_calculateSlipRatio(LaunchControl *me, MotorController *mcm, W
         ubyte2 RearR = (ubyte2)(WheelSpeeds_getWheelSpeedRPM(wss, RR, TRUE) + 0.5);
         ubyte2 FrontL = (ubyte2)(WheelSpeeds_getWheelSpeedRPM(wss, FL, TRUE) + 0.5);
         ubyte4 calcs = (RearR * 1000) / FrontL;
-        me->slipRatioThreeDigits = (ubyte2) calcs;
-    }
         me->slipRatioThreeDigits = (ubyte2) calcs; // Why does the system respond well when we didnt subtract 1?
     }
 }
 
 void LaunchControl_initialTorqueCurve(LaunchControl* me, MotorController* mcm){
-    me->lcTorqueCommand = (sbyte2) me->initialTorque + ( MCM_getMotorRPM(mcm) * 7 / 20 ); // Tunable Values will be the inital Torque Request @ 0 and the scalar factor
+    me->lcTorqueCommand = (sbyte2) me->initialTorque + ( MCM_getMotorRPM(mcm) * me->constA / me->constB ); // Tunable Values will be the inital Torque Request @ 0 and the scalar factor
 }
 
 void LaunchControl_calculateTorqueCommand(LaunchControl *me, TorqueEncoder *tps, BrakePressureSensor *bps, MotorController *mcm, DRS *drs){
@@ -110,7 +108,7 @@ void LaunchControl_calculateTorqueCommand(LaunchControl *me, TorqueEncoder *tps,
             LaunchControl_initialTorqueCurve(me, mcm);
         } else {
             me->initialCurve = FALSE;
-            PID_addSensorInput(me->pidTorque, (sbyte2) MCM_getCommandedTorque(mcm));
+            PID_updateSensorInput(me->pidTorque, (sbyte2) MCM_getCommandedTorque(mcm));
             me->lcTorqueCommand = PID_computeOutput(me->pidTorque, me->slipRatioThreeDigits);
         }
 
@@ -290,7 +288,7 @@ ubyte1 LaunchControl_getButtonDebug(LaunchControl *me) { return me->buttonDebug;
 void LaunchControl_checkRotary(LaunchControl *me)
 {
     switch(Rotary_getLeftPosition()){
-        case ROTARY_POS_0:
+        case ROTARY_POS_1:
             PID_updateSettings(me->pidTorque, setpoint, 325);
             PID_updateSettings(me->pidTorque, frequency, 1);
             me->initialTorque = Standard;
@@ -298,7 +296,7 @@ void LaunchControl_checkRotary(LaunchControl *me)
             me->constB = 20;
             break;
 
-        case ROTARY_POS_1:
+        case ROTARY_POS_2:
             PID_updateSettings(me->pidTorque, setpoint, 325);
             PID_updateSettings(me->pidTorque, frequency, 1);
             me->initialTorque = Standard;
@@ -306,7 +304,7 @@ void LaunchControl_checkRotary(LaunchControl *me)
             me->constB = 40;
             break;
 
-        case ROTARY_POS_2:
+        case ROTARY_POS_3:
             PID_updateSettings(me->pidTorque, setpoint, 315);
             PID_updateSettings(me->pidTorque, frequency, 1);
             me->initialTorque = Standard;
@@ -314,7 +312,7 @@ void LaunchControl_checkRotary(LaunchControl *me)
             me->constB = 20;
             break;
 
-        case ROTARY_POS_3:
+        case ROTARY_POS_4:
             PID_updateSettings(me->pidTorque, setpoint, 300);
             PID_updateSettings(me->pidTorque, frequency, 1);
             me->initialTorque = Medium_High;
@@ -322,14 +320,14 @@ void LaunchControl_checkRotary(LaunchControl *me)
             me->constB = 40;
             break;
 
-        case ROTARY_POS_4:
+        case ROTARY_POS_5:
             PID_updateSettings(me->pidTorque, setpoint, 325);
             PID_updateSettings(me->pidTorque, frequency, 1);
             me->initialTorque = High;
             me->constA = 19;
             me->constB = 60;
             break;
-
+        /*
         case ROTARY_POS_5: // Make this a full hard-coded launch?
             PID_updateSettings(me->pidTorque, setpoint, 325);
             PID_updateSettings(me->pidTorque, frequency, 1);
@@ -337,7 +335,7 @@ void LaunchControl_checkRotary(LaunchControl *me)
             me->constA = 7;
             me->constB = 20;
             break;
-
+        */
         case ROTARY_POS_6:
             PID_updateSettings(me->pidTorque, setpoint, 150);
             PID_updateSettings(me->pidTorque, frequency, 2);
