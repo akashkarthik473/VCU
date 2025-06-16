@@ -108,7 +108,7 @@ void vcu_initializeADC(bool benchMode)
 
     // DRS
     //Sensor_DRSRotary.ioErr_signalInit = IO_ADC_ChannelInit(IO_ADC_32V_00, IO_ADC_ABSOLUTE, 0, 0, IO_ADC_SENSOR_SUPPLY_1, NULL); // IO_ADC_ABSOLUTE / IO_ADC_RATIO..
-    Sensor_DRSKnob.ioErr_signalInit = IO_ADC_ChannelInit(IO_ADC_VAR_00 , IO_ADC_ABSOLUTE , IO_ADC_RANGE_25V, 0, 0, NULL );
+    Sensor_RightKnob.ioErr_signalInit = IO_ADC_ChannelInit(IO_ADC_VAR_00 , IO_ADC_ABSOLUTE , IO_ADC_RANGE_25V, 0, 0, NULL );
      
 
     //TCS Pot
@@ -116,7 +116,7 @@ void vcu_initializeADC(bool benchMode)
 
     //Unused
     //IO_ADC_ChannelInit(IO_ADC_5V_05, IO_ADC_RESISTIVE, 0, 0, 0, NULL);
-    Sensor_PLKnob.ioErr_signalInit=IO_ADC_ChannelInit(IO_ADC_5V_06, IO_ADC_ABSOLUTE, IO_ADC_RANGE_5V, 0, 0, NULL);
+    Sensor_LeftKnob.ioErr_signalInit=IO_ADC_ChannelInit(IO_ADC_5V_06, IO_ADC_ABSOLUTE, IO_ADC_RANGE_5V, 0, 0, NULL);
     //IO_ADC_ChannelInit(IO_ADC_5V_07, IO_ADC_RESISTIVE, 0, 0, 0, NULL);
 
     //----------------------------------------------------------------------------
@@ -213,8 +213,8 @@ Sensor Sensor_LCButton;
 Sensor Sensor_HVILTerminationSense;
 
 Sensor Sensor_DRSButton;
-Sensor Sensor_DRSKnob;
-Sensor Sensor_PLKnob;
+Sensor Sensor_RightKnob;
+Sensor Sensor_LeftKnob;
 
 //Switches
 //precharge failure

@@ -11,7 +11,7 @@
 #include "sensorCalculations.h"
 
 extern Sensor Sensor_DRSButton; 
-extern Sensor Sensor_DRSKnob;
+extern Sensor Sensor_RightKnob;
 
 DRS *DRS_new() 
 {
@@ -19,7 +19,7 @@ DRS *DRS_new()
 
     //flags
     me->AutoDRSActive = FALSE;
-    me->currentDRSMode = DRS_MODE_MANUAL; 
+    me->currentDRSMode = STAY_OPEN; 
     me->drsFlapOpen = FALSE;
     me->drsSafteyTimer = NULL;
 
@@ -68,22 +68,22 @@ void DRS_update(DRS *me, MotorController *mcm, TorqueEncoder *tps, BrakePressure
 
     switch(me->currentDRSMode)
         {
-            case DRS_MODE_STAY_CLOSED:
+            case STAY_CLOSED:
                 DRS_close(me);
                 break;
 
-            case DRS_MODE_STAY_OPEN:
+            case STAY_OPEN:
                 DRS_open(me);           
                 break;
 
-            case DRS_MODE_MANUAL:
+            case MANUAL:
                 if(me->buttonPressed) {
                     DRS_open(me); }
                 else {
                     DRS_close(me); }
                 break;
 
-            case DRS_MODE_ASSISTIVE:
+            case ASSISTIVE:
                 /* 
                 1. To open, check if button is pressed & DRS flap closed (should be false) & Have waited at least 5 cycles (50ms)
                 2. Restar timer & Open DRS
@@ -108,7 +108,7 @@ void DRS_update(DRS *me, MotorController *mcm, TorqueEncoder *tps, BrakePressure
                 }
                 break;
 
-            case DRS_MODE_AUTO:
+            case AUTO:
 
                 // Unknown for now if physical components can be damaged when requesting flap open  when already opened, hence the nested if
                 if (groundspeedMPH > 5 && appsPercent > .75 && steeringAngle > -15 && steeringAngle < 15 && bpsPercent < .10) {

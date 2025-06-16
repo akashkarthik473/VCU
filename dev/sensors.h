@@ -182,8 +182,8 @@ extern Sensor Sensor_TCSSwitchUp;
 extern Sensor Sensor_LCButton;
 extern Sensor Sensor_TCSKnob;
 extern Sensor Sensor_DRSButton;
-extern Sensor Sensor_DRSKnob;
-extern Sensor Sensor_PLKnob;
+extern Sensor Sensor_RightKnob;
+extern Sensor Sensor_LeftKnob;
 //TEMP BENCH SWITCHES
 extern Sensor Sensor_TEMP_BrakingSwitch;
 
@@ -220,30 +220,9 @@ typedef enum {
     ROTARY_POS_6 = 6
 } RotaryPosition;
 
-// DRS mode definitions
-typedef enum {
-    DRS_MODE_OFF = 1,
-    DRS_MODE_MANUAL = 2,
-    DRS_MODE_ASSISTIVE = 3,
-    DRS_MODE_AUTO = 4,
-    DRS_MODE_STAY_OPEN = 5,
-    DRS_MODE_STAY_CLOSED = 6
-} DRSMode;
-
-// PL mode definitions
-typedef enum {
-    PL_MODE_30 = 1,
-    PL_MODE_40 = 2,
-    PL_MODE_50 = 3,
-    PL_MODE_60 = 4,
-    PL_MODE_80 = 5,
-    PL_MODE_OFF = 6
-} PLMode;
-
 // function declarations
-RotaryPosition getRotaryPosition(Sensor* sensor);
-DRSMode getDRSMode(Sensor* sensor);
-PLMode getPLMode();
+RotaryPosition Rotary_getRightPosition();
+RotaryPosition Rotary_getLeftPosition();
 
 
 

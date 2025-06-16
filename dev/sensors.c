@@ -43,8 +43,8 @@ extern Sensor Sensor_RTDButton;
 extern Sensor Sensor_TestButton;
 extern Sensor Sensor_EcoButton;
 extern Sensor Sensor_DRSButton;
-extern Sensor Sensor_DRSKnob;
-extern Sensor Sensor_PLKnob;
+extern Sensor Sensor_RightKnob;
+extern Sensor Sensor_LeftKnob;
 
 extern Sensor Sensor_LCButton;
 extern Sensor Sensor_HVILTerminationSense;
@@ -152,9 +152,9 @@ void sensors_updateSensors(void)
     Sensor_SAS.ioErr_signalGet = IO_ADC_Get(IO_ADC_5V_04, &Sensor_SAS.sensorValue, &Sensor_SAS.fresh);
 
     //DRS Knob
-    Sensor_DRSKnob.ioErr_signalGet = IO_ADC_Get(IO_ADC_VAR_00, &Sensor_DRSKnob.sensorValue, &Sensor_DRSKnob.fresh);
+    Sensor_RightKnob.ioErr_signalGet = IO_ADC_Get(IO_ADC_VAR_00, &Sensor_RightKnob.sensorValue, &Sensor_RightKnob.fresh);
    //PLKnob
-    Sensor_PLKnob.ioErr_signalGet = IO_ADC_Get(IO_ADC_5V_06, &Sensor_PLKnob.sensorValue, &Sensor_PLKnob.fresh);// UPDATE PINOUT!!!!!!!!!!!!!!!!
+    Sensor_LeftKnob.ioErr_signalGet = IO_ADC_Get(IO_ADC_5V_06, &Sensor_LeftKnob.sensorValue, &Sensor_LeftKnob.fresh);// UPDATE PINOUT!!!!!!!!!!!!!!!!
 
 }
 
@@ -228,77 +228,37 @@ void Light_set(Light light, float4 percent)
 * 2015-11-16 - Rusty Pedrosa -
 *****************************************************************************/
 
-RotaryPosition getRotaryPosition(Sensor* sensor) {
-    float voltage = sensor->sensorValue;
-    
-    if (voltage > 4.0) return ROTARY_POS_1;
-    if (voltage > 3.3) return ROTARY_POS_2;
-    if (voltage > 2.6) return ROTARY_POS_3;
-    if (voltage > 1.9) return ROTARY_POS_4;
-    if (voltage > 1.2) return ROTARY_POS_5;
-    if (voltage > 0.5) return ROTARY_POS_6;
-    return ROTARY_POS_0;
-}
-
-DRSMode getDRSMode(Sensor* sensor) {
-    RotaryPosition pos = getRotaryPosition(sensor);
-    
-    switch(pos) {
-        case ROTARY_POS_1:
-            return DRS_MODE_OFF;
-        case ROTARY_POS_2:
-            return DRS_MODE_MANUAL;
-        case ROTARY_POS_3:
-            return DRS_MODE_ASSISTIVE;
-        case ROTARY_POS_4:
-            return DRS_MODE_AUTO;
-        case ROTARY_POS_5:
-            return DRS_MODE_STAY_OPEN;
-        case ROTARY_POS_6:
-            return DRS_MODE_STAY_CLOSED;
-        default:
-            return DRS_MODE_OFF;  // default to safe mode
-    }
-}
-
-PLMode getPLMode() {
-    //RotaryPosition pos = getRotaryPosition(sensor);
-    float voltage= (float)(Sensor_PLKnob.sensorValue);
+RotaryPosition Rotary_getRightPosition() {
+    float voltage= (float)(Sensor_RightKnob.sensorValue);
     if (voltage > 3700) {
-    return PL_MODE_80;
-    } 
-    else if (voltage > 2900) {
-        return PL_MODE_60;
-    } 
-    else if (voltage > 2300) {
-        return PL_MODE_50;
-    } 
-    else if (voltage > 1500) {
-        return PL_MODE_40;
-    } 
-    else if (voltage > 800) {
-        return PL_MODE_30;
-    } 
-    else{
-        return PL_MODE_OFF;
+        return ROTARY_POS_1;
+    } else if (voltage > 2900) {
+        return ROTARY_POS_2;
+    } else if (voltage > 2300) {
+        return ROTARY_POS_3;
+    } else if (voltage > 1500) {
+        return ROTARY_POS_4;
+    } else if (voltage > 800) {
+        return ROTARY_POS_5;
+    } else{
+        return ROTARY_POS_6;
     }
+}
 
-    /*
-    switch(pos) {
-        case ROTARY_POS_1:
-            return PL_MODE_30;
-        case ROTARY_POS_2:
-            return PL_MODE_40;
-        case ROTARY_POS_3:
-            return PL_MODE_50;
-        case ROTARY_POS_4:
-            return PL_MODE_60;
-        case ROTARY_POS_5:
-            return PL_MODE_80;
-        case ROTARY_POS_6:
-            return PL_MODE_OFF;
-        default:
-            return PL_MODE_OFF;  // default to safe mode
+RotaryPosition Rotary_getLeftPosition() {
+    //RotaryPosition pos = Rotary_getRightPosition(sensor);
+    float voltage= (float)(Sensor_LeftKnob.sensorValue);
+    if (voltage > 3700) {
+        return ROTARY_POS_1;
+    } else if (voltage > 2900) {
+        return ROTARY_POS_2;
+    } else if (voltage > 2300) {
+        return ROTARY_POS_3;
+    } else if (voltage > 1500) {
+        return ROTARY_POS_4;
+    } else if (voltage > 800) {
+        return ROTARY_POS_5;
+    } else{
+        return ROTARY_POS_6;
     }
-    */
 }

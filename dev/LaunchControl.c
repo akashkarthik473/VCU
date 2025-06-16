@@ -16,7 +16,7 @@
 #include "IO_Driver.h" //Includes datatypes, constants, etc - should be included in every c file
 
 extern Sensor Sensor_LCButton;
-extern Sensor Sensor_DRSKnob;
+extern Sensor Sensor_RightKnob;
 
 //LC Status Flags
 //nibble 1
@@ -31,17 +31,13 @@ static const ubyte1 LC_belowSlipTarget = 0x40;
 static const ubyte1 LC_aboveSlipTarget = 0x80;
 
 //Initial Torque Setpoints
-static const sbyte2 PnR_noAero = 65;
-static const sbyte2 Crows_15Aero = 100;
-static const sbyte2 Crows_16 = 110;
-static const sbyte2 Crows_16_2ndPass = 120;
+static const sbyte2 Low = 105;
+static const sbyte2 Standard = 110;
+static const sbyte2 Medium_High = 115;
+static const sbyte2 High = 120;
+static const sbyte2 Rain_Guess_1 = 40;
+static const sbyte2 Rain_Guess_2 = 50;
 
-
-//Preset Torque Curves
-// Crows_15Aero = MCM_getMotorRPM(mcm) * 4 / 10
-
-// Slip Targets
-// Crows_15Aero -> 300
 
 LaunchControl *LaunchControl_new(){
     LaunchControl* me = (LaunchControl*)malloc(sizeof(struct _LaunchControl));
@@ -54,7 +50,10 @@ LaunchControl *LaunchControl_new(){
     PID_updateSettings(me->pidTorque, setpoint, 325); // Having a statically coded slip ratio may not be the best. this requires knowing that this is both a) the best slip ratio for the track, and b) that our fronts are not in any way slipping / entirely truthful regarding the groundspeed of the car. Using accel as a target is perhaps better, but needs to be better understood.
     PID_updateSettings(me->pidTorque, frequency, 1);
     me->lcTorqueCommand = NULL;
-    me->initialTorque = Crows_16;
+    me->initialTorque = Standard;
+
+    me->constA = 7;
+    me->constB = 20;
 
     //Slip Ratio
     me->slipRatio = 0;
@@ -100,25 +99,6 @@ void LaunchControl_calculateSlipRatio(LaunchControl *me, MotorController *mcm, W
         ubyte4 calcs = (RearR * 1000) / FrontL;
         me->slipRatioThreeDigits = (ubyte2) calcs;
     }
-    ubyte2 thing = 0;
-    if(Sensor_LCButton.sensorValue == TRUE)
-    {
-        thing = 1;
-    }
-    else{
-        thing = 0;
-    }
-    MCM_setFakeMessage(mcm, thing);
-    ubyte2 (*fpr)(MotorController*,ubyte2);
-    fpr = &MCM_getFakeMessage;
-    PID_addSensorInput(me->pidTorque, fpr);
-    ubyte2 sensorCheck = MCM_getFakeMessage(mcm);
-    if(sensorCheck == me->pidTorque->output)
-    {
-        me->constantSpeedTestOverride = TRUE;
-    } else {
-        me->constantSpeedTestOverride = FALSE;
-    }
 }
 
 void LaunchControl_calculateTorqueCommand(LaunchControl *me, TorqueEncoder *tps, BrakePressureSensor *bps, MotorController *mcm, DRS *drs){
@@ -146,6 +126,10 @@ void LaunchControl_calculateTorqueCommand(LaunchControl *me, TorqueEncoder *tps,
             me->overTorque = TRUE;
         }
         else { me->overTorque = FALSE; }
+
+        if(MCM_getMotorRPM(mcm) >= 3500) {
+            me->lcTorqueCommand = 225; // Mini-Torque Derate, might help with field weakening as well as staying under 80 kwh threshold
+        }
         MCM_update_LC_torqueCommand(mcm, me->lcTorqueCommand);
     }
 }
@@ -200,11 +184,11 @@ void LaunchControl_checkState(LaunchControl *me, TorqueEncoder *tps, BrakePressu
         
         if (me->safteyTimer == 0){
             IO_RTC_StartTime(&me->safteyTimer);
-            DRS_open(drs); // Visual Indicator of LC staging
+            // DRS_open(drs); // Visual Indicator of LC staging
         }
         else if (IO_RTC_GetTimeUS(me->safteyTimer) >= 50000) {
             me->lcReady = TRUE;
-            DRS_close(drs); // Visual Indicator of LC staging
+            // DRS_close(drs); // Visual Indicator of LC staging
             me->safteyTimer = 0; // We don't need to track the time anymore
         }
         
@@ -228,7 +212,7 @@ void LaunchControl_checkState(LaunchControl *me, TorqueEncoder *tps, BrakePressu
 }
 
 void LaunchControl_initialTorqueCurve(LaunchControl* me, MotorController* mcm){
-    me->lcTorqueCommand = (sbyte2) me->initialTorque + ( MCM_getMotorRPM(mcm) * 7 / 20 ); // Tunable Values will be the inital Torque Request @ 0 and the scalar factor
+    me->lcTorqueCommand = (sbyte2) me->initialTorque + ( MCM_getMotorRPM(mcm) * me->constA / me->constB ); // Tunable Values will be the inital Torque Request @ 0 and the scalar factor
 }
 
 void LaunchControl_initialRPMCurve(LaunchControl* me, MotorController* mcm){
@@ -318,4 +302,66 @@ float LaunchControl_getSlipRatio(LaunchControl *me){ return me->slipRatio; }
 sbyte2 LaunchControl_getSlipRatioThreeDigits(LaunchControl *me){ return me->slipRatioThreeDigits; }
 
 ubyte1 LaunchControl_getButtonDebug(LaunchControl *me) { return me->buttonDebug; }
+
+void LaunchControl_checkRotary(LaunchControl *me)
+{
+    switch(Rotary_getLeftPosition()){
+        case ROTARY_POS_0:
+            PID_updateSettings(me->pidTorque, setpoint, 325);
+            PID_updateSettings(me->pidTorque, frequency, 1);
+            me->initialTorque = Standard;
+            me->constA = 7;
+            me->constB = 20;
+            break;
+
+        case ROTARY_POS_1:
+            PID_updateSettings(me->pidTorque, setpoint, 325);
+            PID_updateSettings(me->pidTorque, frequency, 1);
+            me->initialTorque = Standard;
+            me->constA = 13;
+            me->constB = 40;
+            break;
+
+        case ROTARY_POS_2:
+            PID_updateSettings(me->pidTorque, setpoint, 315);
+            PID_updateSettings(me->pidTorque, frequency, 1);
+            me->initialTorque = Standard;
+            me->constA = 7;
+            me->constB = 20;
+            break;
+
+        case ROTARY_POS_3:
+            PID_updateSettings(me->pidTorque, setpoint, 300);
+            PID_updateSettings(me->pidTorque, frequency, 1);
+            me->initialTorque = Medium_High;
+            me->constA = 13;
+            me->constB = 40;
+            break;
+
+        case ROTARY_POS_4:
+            PID_updateSettings(me->pidTorque, setpoint, 325);
+            PID_updateSettings(me->pidTorque, frequency, 1);
+            me->initialTorque = High;
+            me->constA = 19;
+            me->constB = 60;
+            break;
+
+        case ROTARY_POS_5: // Make this a full hard-coded launch?
+            PID_updateSettings(me->pidTorque, setpoint, 325);
+            PID_updateSettings(me->pidTorque, frequency, 1);
+            me->initialTorque = Standard;
+            me->constA = 7;
+            me->constB = 20;
+            break;
+
+        case ROTARY_POS_6:
+            PID_updateSettings(me->pidTorque, setpoint, 150);
+            PID_updateSettings(me->pidTorque, frequency, 2);
+            me->initialTorque = Rain_Guess_2;
+            me->constA = 3;
+            me->constB = 10;
+            break;
+    }
+}
+
 #endif

@@ -52,7 +52,7 @@ extern Sensor Sensor_BenchTPS1;
 
 extern Sensor Sensor_RTDButton;
 extern Sensor Sensor_EcoButton;
-extern Sensor Sensor_DRSKnob;
+extern Sensor Sensor_RightKnob;
 extern Sensor Sensor_DRSButton;
 extern Sensor Sensor_TCSSwitchUp;
 extern Sensor Sensor_TCSSwitchDown;

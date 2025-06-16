@@ -8,12 +8,12 @@
 #include "motorController.h"
 #include "sensorCalculations.h"
 
-// Rotary Switch modes:
+// DRS Rotary Switch modes:
 //      Mode 0 - Always off
 //      Mode 1 - Always on
 //      Mode 2 - Driver controlled
 //      Mode 3 - Assistive (manual & sensor controlled)
-enum { STAY_CLOSED, STAY_OPEN, MANUAL, ASSISTIVE, AUTO };
+enum { STAY_CLOSED, STAY_OPEN, MANUAL, ASSISTIVE, AUTO } DRS_MODE;
 
 //_DRS is a structure tag, used to reference the structure for future initializations 
 typedef struct _DRS

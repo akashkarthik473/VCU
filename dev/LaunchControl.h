@@ -17,6 +17,8 @@ typedef struct _LaunchControl {
     PID *pidTorque;
     sbyte2 lcTorqueCommand;
     sbyte2 initialTorque;
+    sbyte2 constA;
+    sbyte2 constB;
 
     float4 slipRatio;
     ubyte2 slipRatioThreeDigits;
@@ -50,7 +52,7 @@ void LaunchControl_initialRPMCurve(LaunchControl* me, MotorController* mcm);
 float LaunchControl_getSlipRatio(LaunchControl *lc);
 sbyte2 LaunchControl_getSlipRatioThreeDigits(LaunchControl *lc);
 ubyte1 LaunchControl_getButtonDebug(LaunchControl *lc);
-
+void LaunchControl_checkRotary(LaunchControl *me);
 #endif //_LAUNCHCONTROL_H
 
 #endif
