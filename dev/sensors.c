@@ -228,9 +228,9 @@ void Light_set(Light light, float4 percent)
 * 2015-11-16 - Rusty Pedrosa -
 *****************************************************************************/
 RotaryPosition getRotaryPosition(Sensor* sensor) {
-    float voltage = sensor->sensorValue;
+    // float voltage = sensor->sensorValue;
     
-     float voltage= (float)(Sensor_PLKnob.sensorValue);
+    float voltage= (float)(Sensor_PLKnob.sensorValue);
     if (voltage > 3700) {
     return PL_MODE_80;
     } 

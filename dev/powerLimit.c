@@ -106,12 +106,16 @@ void PowerLimit_calculateCommand(PowerLimit *me, MotorController *mcm, TorqueEnc
     
     PLMode mode = getPLMode(&Sensor_PLKnob);
     PowerLimit_InitializeParameters(me);
+    sbyte4 DC_Current = MCM_getDCCurrent(mcm);
+    if (DC_Current < 0){
+        DC_Current = 0;
+    }
 
     if (me->plTargetPower == 0 || MCM_commands_getAppsTorque(mcm) == 0) { // if no torque command, turn off PL
         me->plStatus = FALSE;
     }
     else {
-        sbyte4 current_power_kw = MCM_getPower(mcm) / 1000;
+        sbyte4 current_power_kw = (sbyte4) ((MCM_getDCVoltage(mcm) * DC_Current) / 1000);
         if (!me->plAlwaysOn) { // if PL is not always on, only turn on if power is above threshold and off if below
             if (current_power_kw > me->plInitializationThreshold) {
                 me->plStatus = TRUE;
