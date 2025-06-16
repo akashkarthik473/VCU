@@ -230,13 +230,25 @@ void Light_set(Light light, float4 percent)
 RotaryPosition getRotaryPosition(Sensor* sensor) {
     float voltage = sensor->sensorValue;
     
-    if (voltage > 2900) return ROTARY_POS_1;
-    if (voltage > 2300) return ROTARY_POS_2;
-    if (voltage > 1500) return ROTARY_POS_3;
-    if (voltage > 800) return ROTARY_POS_4;
-    //if (voltage > 800) return ROTARY_POS_5;
-    //if (voltage > 800) return ROTARY_POS_6;
-    return ROTARY_POS_0;
+     float voltage= (float)(Sensor_PLKnob.sensorValue);
+    if (voltage > 3700) {
+    return PL_MODE_80;
+    } 
+    else if (voltage > 2900) {
+        return PL_MODE_60;
+    } 
+    else if (voltage > 2300) {
+        return PL_MODE_50;
+    } 
+    else if (voltage > 1500) {
+        return PL_MODE_40;
+    } 
+    else if (voltage > 800) {
+        return PL_MODE_30;
+    } 
+    else{
+        return PL_MODE_OFF;
+    }
 }
 
 PLMode getPLMode() {

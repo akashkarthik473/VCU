@@ -54,7 +54,7 @@ PowerLimit* POWERLIMIT_new(){
 }
 
 void PowerLimit_InitializeParameters(PowerLimit* me){
-    // if shauns code works
+    
     PLMode mode = getPLMode();
     
 
