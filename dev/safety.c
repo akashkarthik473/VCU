@@ -301,13 +301,16 @@ void SafetyChecker_update(SafetyChecker *me, MotorController *mcm, BatteryManage
     bool tpsAbove25Percent = (tps->travelPercent > .25); //Rules is 25% this is a hack that is made to check
 
     //If mechanical brakes actuated && tps > 25%
+    /*
     if (bps->percent >=  BRAKES_APPS_THRESH && tpsAbove25Percent)
     {
         // Set the TPS/BPS implaisibility VCU fault
         me->faults |= F_tpsbpsImplausible;
         //SerialManager_send(me->serialMan, "TPS BPS implausiblity detected.\n");
     }
-    else if (tps->travelPercent < .05) //TPS is reduced to < 5%
+    */
+    //else
+    if (tps->travelPercent < .05) //TPS is reduced to < 5%
     {
         // There is no implausibility if TPS is below 5%
         me->faults &= ~(F_tpsbpsImplausible); //turn off the implausibility flag
